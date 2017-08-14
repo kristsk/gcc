@@ -106,3 +106,7 @@ Assume that all data in static storage can be accessed by LDS / STS.  This optio
 nodevicelib
 Driver Target Report RejectNegative
 Do not link against the device-specific library lib<MCU>.a.
+
+mput-vtables-in-flash
+Target Report Var(avr_put_vtables_in_flash)
+Keep vtables in flash, save some RAM at expense of doing LPM instructions

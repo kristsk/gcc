@@ -27,6 +27,8 @@
 #include "rtl.h"
 #include "tree.h"
 #include "cgraph.h"
+#include "cp/cp-tree.h"
+#include "attribs.h"
 #include "c-family/c-common.h"
 #include "cfghooks.h"
 #include "df.h"
@@ -930,6 +932,31 @@ avr_mem_flash_p (rtx x)
           && !ADDR_SPACE_GENERIC_P (MEM_ADDR_SPACE (x)));
 }
 
+bool
+avr_flash_mem_vtable_ptr_p(rtx x) {
+
+  if (avr_put_vtables_in_flash
+      && MEM_P (x)
+      && MEM_EXPR (x)
+      && CONST_CAST_TREE (MEM_EXPR (x))
+      && POINTER_TYPE_P (TREE_TYPE (CONST_CAST_TREE (MEM_EXPR (x))))
+      && TYPE_NAME (TREE_TYPE (CONST_CAST_TREE (MEM_EXPR (x))))
+      && DECL_NAME (TYPE_NAME (TREE_TYPE (CONST_CAST_TREE (MEM_EXPR (x)))))
+  )
+    {
+      tree x_tree = CONST_CAST_TREE (MEM_EXPR (x));
+      tree x_type = TREE_TYPE (x_tree);
+      tree x_type_name = TYPE_NAME (x_type);
+      tree x_decl_name = DECL_NAME (x_type_name);
+
+      if (strcmp (IDENTIFIER_POINTER (x_decl_name), "__vtbl_ptr_type") == 0)
+        {
+          return true;
+        }
+    }
+
+  return false;
+}
 
 /* Return TRUE if X is a MEM rtx located in the 24-bit flash
    address space and FALSE, otherwise.  */
@@ -14233,6 +14260,24 @@ avr_fold_builtin (tree fndecl, int n_args ATTRIBUTE_UNUSED, tree *arg,
   return NULL_TREE;
 }
 
+void avr_adjust_class_at_definition (tree type) {
+
+  gcc_assert (CLASS_TYPE_P (type));
+
+  if (avr_put_vtables_in_flash)
+    {
+      tree vtable;
+      for (vtable = (&TYPE_LANG_SPECIFIC (type)->u.c)->vtables; vtable;
+           vtable = DECL_CHAIN (vtable))
+        {
+          DECL_ATTRIBUTES (vtable)
+            = make_attribute ("progmem", "vtable", DECL_ATTRIBUTES (vtable));
+
+          TYPE_ADDR_SPACE (TREE_TYPE (TREE_TYPE (vtable))) = 1;
+        }
+    }
+}
+
 
 
 /* Initialize the GCC target structure.  */
@@ -14403,6 +14448,9 @@ avr_fold_builtin (tree fndecl, int n_args ATTRIBUTE_UNUSED, tree *arg,
 
 #undef  TARGET_LEGITIMATE_COMBINED_INSN
 #define TARGET_LEGITIMATE_COMBINED_INSN avr_legitimate_combined_insn
+
+#undef TARGET_CXX_ADJUST_CLASS_AT_DEFINITION
+#define TARGET_CXX_ADJUST_CLASS_AT_DEFINITION avr_adjust_class_at_definition
 
 struct gcc_target targetm = TARGET_INITIALIZER;
 

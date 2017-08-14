@@ -125,11 +125,13 @@ extern bool avr_regno_mode_code_ok_for_base_p (int, machine_mode, addr_space_t, 
 extern rtx avr_incoming_return_addr_rtx (void);
 extern rtx avr_legitimize_reload_address (rtx*, machine_mode, int, int, int, int, rtx (*)(rtx,int));
 extern bool avr_mem_flash_p (rtx);
+extern bool avr_flash_mem_vtable_ptr_p (rtx);
 extern bool avr_mem_memx_p (rtx);
 extern bool avr_load_libgcc_p (rtx);
 extern bool avr_xload_libgcc_p (machine_mode);
 extern rtx avr_eval_addr_attrib (rtx x);
 extern bool avr_casei_sequence_check_operands (rtx *xop);
+extern void avr_adjust_class_at_definition (tree);
 
 static inline unsigned
 regmask (machine_mode mode, unsigned regno)

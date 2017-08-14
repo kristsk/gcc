@@ -654,6 +654,22 @@
         operands[1] = src = copy_to_mode_reg (<MODE>mode, src);
       }
 
+    if (avr_flash_mem_vtable_ptr_p (src))
+      {
+        rtx addr = XEXP (src, 0);
+
+        if (!REG_P (addr))
+          {
+            rtx reg_w_addr = copy_addr_to_reg (addr);
+            rtx reg_w_mem_addr = gen_rtx_MEM (HImode, reg_w_addr);
+            set_mem_addr_space (reg_w_mem_addr, 1);
+
+            emit_move_insn (dest, reg_w_mem_addr);
+
+            DONE;
+          }
+      }
+
     if (avr_mem_memx_p (src))
       {
         rtx addr = XEXP (src, 0);
